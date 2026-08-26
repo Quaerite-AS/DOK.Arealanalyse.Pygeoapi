@@ -1,0 +1,31 @@
+---
+type: dataset
+config_id: 3c5d9405-50c7-454c-a6d2-3eec32c9f5d7
+name: spr_strandsone
+title: Statlige planretningslinjer for differensiert forvaltning av strandsonen langs sjøen
+comment: >
+  100-metersbeltet langs sjø (pbl § 1-8), ferdig avledet av Kartverket fra
+  Primærdata Kystkontur (MHV). Lagt til av Quaerite (#191) — finnes ikke i
+  kartverket/DOK.Arealanalyse.Config. Attributtet planretningslinjerStrandsone
+  er SPR-sone (1/2/3).
+
+metadata_id: f50f228a-9482-4821-97df-41166c1f5a9b
+wfs: https://wfs.geonorge.no/skwms1/wfs.spr
+wms: https://wms.geonorge.no/skwms1/wms.spr_strandsoner
+layers:
+  - wfs: RprOmråde
+    wms:
+      - spr_strandsoner
+    result_status: HIT-RED
+geom_field: område
+properties:
+  - kommune
+  - planretningslinjerStrandsone
+  - generellrestriksjon
+  - datauttaksdato
+  - ikrafttredelsesdato
+  - opphav
+  - versjonId
+themes:
+  - Strandsone
+  - Plan
