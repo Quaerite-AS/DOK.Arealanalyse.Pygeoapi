@@ -19,6 +19,8 @@ RUN apt update -y \
     && git clone --depth 1 https://github.com/kartverket/DOK.Arealanalyse.Config.git /mnt/dokanalyse/config \
     && chmod +x /dokanalyse-entrypoint.sh
 
+COPY config/*.yml /mnt/dokanalyse/config/
+
 ENV PYGEOAPI_CONFIG=/pygeoapi/pygeoapi-config.yml \
     WSGI_APP=pygeoapi.starlette_app:APP \
     DOKANALYSE_APP_FILES_DIR=/mnt/dokanalyse \
