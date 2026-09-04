@@ -1,0 +1,77 @@
+# Overstyrer kartverket/DOK.Arealanalyse.Config sin nve_faresone_kvikkleireskred.yml.
+#
+# HVORFOR: ArcGIS-transporten (nve.geodataonline.no/arcgis/.../SkredKvikkleire2) svarer
+# resultStatus=ERROR/HTTP 500 i produksjon (verifisert 2026-09-04, quaerite-platform#263 funn D).
+# Beslutning (Håvard, 2026-09-04): bruk WFS. Uendret fra upstream: config_id, metadata_id, name,
+# themes, wms, planning_guidance_id, building_guidance_id. Endret: transportlaget arcgis: → wfs:,
+# OG lagvalget — se begrunnelse under. properties er IKKE videreført uendret (se forbehold).
+#
+# VERIFISERING (2026-09-04, live mot wfs.geonorge.no, egress kjørt utenfor denne sesjonen):
+# - GetCapabilities: tjenesten wfs.kvikkleire har EPSG:25833 i OtherCRS (DefaultCRS er 4258 —
+#   srsName må settes eksplisitt). Lagnavn prefiks app:, navnerom
+#   http://skjema.geonorge.no/SOSI/produktspesifikasjon/Skredfare/1.2 (samme spec som
+#   wfs.skredfaresoner, se nve_faresone_skred_bratt_terreng.yml).
+# - Fem lag finnes: UtlosningOmr, UtlopOmr, KvikkleireFaresoneAvgr, Kartleggingsområde,
+#   Kartleggingsområdekant.
+# - GetFeature bbox 264756,6568641,270756,6574641 (Fredrikstad): UtlosningOmr 5, UtlopOmr 5,
+#   KvikkleireFaresoneAvgr 5, Kartleggingsområde 1 (talt i GML-bodyen — numberReturned
+#   rapporterte feilaktig "0" for alle fire, kjent Geonorge-felle).
+#
+# LAGVALG — bevisst TO lag, ikke KvikkleireFaresoneAvgr alene:
+# Datasettet skiller utløsningsområde (der skredet kan starte) fra utløpsområde (der skredmassene
+# kan nå). Et tiltak kan ligge i utløpsområdet uten å ligge i utløsningsområdet, og begge er
+# byggesak-relevante — TEK17 § 7-3 / pbl § 28-1 gjelder uavhengig av hvilket av de to en
+# eiendom rammes av. Samme topologi (Utlosning+Utlop som separate Flate-objekter) finnes i
+# NVEs snøskred-aktsomhetsprodukt under samme SOSI-familie, der de to uttrykkelig er separate
+# lag, ikke ett kombinert lag.
+# KvikkleireFaresoneAvgr ble vurdert og valgt BORT som treffobjekt: Geonorge-objektkatalogens
+# egen beskrivelse omtaler den som «linje som avgrenser område...» (avgrensningslinje) — altså
+# trolig en Kurve/grenselinje, ikke et Flate-objekt som kan brukes til arealtreff. Geometritypen
+# er IKKE bekreftet i denne sesjonen (DescribeFeatureType ble ikke kjørt mot dette laget), så
+# dette er en STOPP-flagget usikkerhet, ikke en påstand — men den støtter valget av
+# UtlosningOmr/UtlopOmr som de trygge, Flate-baserte treffobjektene.
+# Konsekvens: skredOmrNavn/faregrad/konsekvens/risiko/rapportURL fra den gamle ArcGIS-konfigen er
+# IKKE videreført — de er den samlede faresone-klassifiseringen som (ifølge objektkatalogens
+# beskrivelse: «vurdert basert på skadekonsekvens og faregrad») trolig hører til
+# KvikkleireFaresoneAvgr, ikke til UtlosningOmr/UtlopOmr. properties under er derfor et
+# forsiktig utvalg av SOSI/Skredfare-1.2-standardfelt bekreftet på et beslektet objekt
+# (app:SkredFaresone i samme produktspesifikasjon, se nve_faresone_skred_bratt_terreng.yml) —
+# IKKE uavhengig bekreftet på UtlosningOmr/UtlopOmr selv. Kjør DescribeFeatureType på begge lag
+# før produksjonssetting; det avgjør både faktisk attributtsett og geom_field (satt til
+# «område» her, arvet fra søsterlaget SkredFaresone i samme namespace — sannsynlig, ikke
+# uavhengig verifisert for disse to lagene).
+#
+# DEKNING (oppgave 3): Kartleggingsområde/Kartleggingsområdekant ser ut som kandidat-dekningslag
+# («området som er analysert/kartlagt for skredfare») og ga 1 feature i Fredrikstad-bboxen —
+# men attributtskjemaet (finnes det et dekningStatus-lignende felt, slik
+# KvikkleireskredAktsomhetDekning har?) er IKKE verifisert. Ingen quality-blokk er derfor lagt
+# til her. Dekning forblir `ukjent` for dette temaet inntil DescribeFeatureType er kjørt mot
+# Kartleggingsområde — håndteres på vår side (INV-R16: kilde/skjema ukjent degraderer aldri til
+# stille grønn).
+type: dataset
+config_id: c24e0058-f555-4a47-b65b-4f011e64789e
+name: faresone_kvikkleireskred
+
+metadata_id: b2d5aaf8-79ac-40f3-9cd6-fdc30bc42ea1
+wfs: https://wfs.geonorge.no/skwms1/wfs.kvikkleire
+wms: https://nve.geodataonline.no/arcgis/services/SkredKvikkleire2/MapServer/WMSServer
+layers:
+  - wfs: UtlosningOmr
+    wms:
+      - KvikkleireRisiko
+    result_status: HIT-RED
+    planning_guidance_id: 1490d2ee-a5c6-4dfb-907a-44cb5022781b
+    building_guidance_id: 2e84d54f-9e93-4559-8214-8cb21567fa04
+  - wfs: UtlopOmr
+    wms:
+      - KvikkleireRisiko
+    result_status: HIT-RED
+    planning_guidance_id: 1490d2ee-a5c6-4dfb-907a-44cb5022781b
+    building_guidance_id: 2e84d54f-9e93-4559-8214-8cb21567fa04
+geom_field: område
+properties:
+  - datauttaksdato
+  - datafangstdato
+  - opphav
+themes:
+  - Samfunnssikkerhet

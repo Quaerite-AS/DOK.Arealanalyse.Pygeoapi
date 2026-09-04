@@ -1,0 +1,53 @@
+# Overstyrer kartverket/DOK.Arealanalyse.Config sin nve_faresone_skred_bratt_terreng.yml.
+#
+# HVORFOR: ArcGIS-transporten (nve.geodataonline.no/arcgis/.../Skredfaresoner1) svarer
+# resultStatus=ERROR/HTTP 500 i produksjon (verifisert 2026-09-04, quaerite-platform#263 funn D).
+# Beslutning (Håvard, 2026-09-04): bruk WFS. Uendret fra upstream: config_id, metadata_id
+# (bevisst delt med nve_faresone_kvikkleireskred.yml — to fenomener under samme DOK-datasett hos
+# DiBK), name, themes, result_status, planning_guidance_id, building_guidance_id, wms. Endret:
+# transportlaget arcgis: → wfs:, og properties (se forbehold under).
+#
+# VERIFISERING (2026-09-04, live mot wfs.geonorge.no, egress kjørt utenfor denne sesjonen):
+# - GetCapabilities: tjenesten wfs.skredfaresoner har EPSG:25833 i OtherCRS (DefaultCRS er 4258 —
+#   srsName må settes eksplisitt). Lagnavn prefiks app:, navnerom
+#   http://skjema.geonorge.no/SOSI/produktspesifikasjon/Skredfare/1.2.
+# - Fire lag finnes: SkredFaresone (treffobjektet), SkredFaregrense, Analyseområde,
+#   AnalyseområdeGr.
+# - GetFeature bbox 80436,6931689,86436,6937689 (Stranda): SkredFaresone 5 features,
+#   Analyseområde 2 features (talt i GML-bodyen — numberReturned rapporterte feilaktig "0" for
+#   begge, kjent Geonorge-felle).
+# - DescribeFeatureType/faktisk feature på app:SkredFaresone bekreftet: geometrifelt app:område
+#   som gml:MultiSurface, srsName EPSG::25833. Attributter observert: app:identifikasjon
+#   (lokalId, navnerom, versjonId — nøstet, ikke flatet ut i properties under),
+#   app:datauttaksdato, app:datafangstdato, app:opphav.
+# - Upstream sine properties (skredOmrID, vurdertStatSannsynlighet, KARTLEGGINGSDATO) ble IKKE
+#   observert på den faktiske featuren og er derfor fjernet, ikke videreført blindt — erstattet
+#   med de bekreftede feltene.
+#
+# DEKNING (oppgave 3): Analyseområde/AnalyseområdeGr ser ut som kandidat-dekningslag («området
+# som er ferdig analysert for skredfare i bratt terreng») og ga 2 features i Stranda-bboxen —
+# men attributtskjemaet (dekningStatus-lignende felt eller ren tilstedeværelse uten statuskode?)
+# er IKKE verifisert. Ingen quality-blokk er derfor lagt til her. Dekning forblir `ukjent` for
+# dette temaet inntil DescribeFeatureType er kjørt mot Analyseområde — håndteres på vår side
+# (INV-R16).
+type: dataset
+config_id: d893e564-0a9d-4d3b-8d4f-8485b843b9a0
+name: faresone_skred_bratt_terreng
+
+metadata_id: b2d5aaf8-79ac-40f3-9cd6-fdc30bc42ea1
+wfs: https://wfs.geonorge.no/skwms1/wfs.skredfaresoner
+wms: https://nve.geodataonline.no/arcgis/services/Skredfaresoner1/MapServer/WMSServer
+layers:
+  - wfs: SkredFaresone
+    wms:
+      - Skredanalyseomraade
+    result_status: HIT-RED
+    planning_guidance_id: 1490d2ee-a5c6-4dfb-907a-44cb5022781b
+    building_guidance_id: c37bac2a-1e32-49f8-b633-a305c166ec38
+geom_field: område
+properties:
+  - datauttaksdato
+  - datafangstdato
+  - opphav
+themes:
+  - Samfunnssikkerhet

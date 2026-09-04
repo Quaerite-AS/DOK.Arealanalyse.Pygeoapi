@@ -1,0 +1,73 @@
+# Overstyrer kartverket/DOK.Arealanalyse.Config sin nve_aktsomhetsomr_kvikkleireskred.yml.
+#
+# HVORFOR: ArcGIS-transporten (nve.geodataonline.no/arcgis/.../KvikkleireskredAktsomhet)
+# svarer resultStatus=ERROR/HTTP 500 i produksjon (verifisert 2026-09-04, quaerite-platform#263
+# funn D — live-kall mot theme=Samfunnssikkerhet). Beslutning (Håvard, 2026-09-04): bruk WFS.
+# Uendret fra upstream: config_id, metadata_id, name, themes, result_status, planning_guidance_id,
+# building_guidance_id, wms. Endret: kun transportlaget arcgis: → wfs:.
+#
+# VERIFISERING (2026-09-04, live mot wfs.geonorge.no, egress kjørt utenfor denne sesjonen):
+# - GetCapabilities: tjenesten wfs.aktsomhetskartforkvikkleireskred har EPSG:25833 i OtherCRS
+#   (DefaultCRS er 4258 — srsName må settes eksplisitt). Lagnavn har prefiks app:, navnerom
+#   https://skjema.geonorge.no/SOSI/produktspesifikasjon/KvikkleireskredAktsomhet/1.0
+# - GetFeature bbox 267331,7038761,273331,7044761 (Trondheim): app:AktsomhetsOmrKvikkleireskred
+#   ga 5 features (talt i GML-bodyen — numberReturned-attributtet rapporterte feilaktig "0" for
+#   alle svar; dette er en kjent Geonorge-felle, tell aldri på attributtet).
+# - properties (skredType, opphav, noyaktighet, oppdateringsdato) er IKKE reverifisert mot
+#   DescribeFeatureType for dette laget — videreført fra ArcGIS-konfigen uendret. geom_field
+#   (område) er IKKE bekreftet for nettopp dette laget/denne tjenesten heller — kun bekreftet
+#   som feltnavn på app:SkredFaresone i en annen tjeneste (wfs.skredfaresoner, samme mønster).
+#   Kjør DescribeFeatureType på app:AktsomhetsOmrKvikkleireskred før produksjonssetting.
+type: dataset
+config_id: 08a6057d-ab78-4114-b924-9d6e093d1a5b
+name: aktsomhetsomr_kvikkleireskred
+
+metadata_id: dabd2a2c-36d5-4ed7-a4c9-d49808a2b848
+wfs: https://wfs.geonorge.no/skwms1/wfs.aktsomhetskartforkvikkleireskred
+wms: https://nve.geodataonline.no/arcgis/services/KvikkleireskredAktsomhet/MapServer/WMSServer
+layers:
+  - wfs: AktsomhetsOmrKvikkleireskred
+    wms:
+      - KvikkleireskredAktsomhet
+    result_status: HIT-YELLOW
+    planning_guidance_id: 3316086f-d95a-409e-a184-7b98ed21cfbd
+    building_guidance_id: d34718b6-da67-47c7-a61d-05f222f8e613
+geom_field: område
+properties:
+  - skredType
+  - opphav
+  - noyaktighet
+  - oppdateringsdato
+themes:
+  - Samfunnssikkerhet
+---
+# Oppgave 3 (#263): dekning byttet fra lokal geojson-fil til WFS. Upstream sin quality-blokk
+# pekte på file:///mnt/dokanalyse/geojson/dekningskart_nve_aktsomhetsomr_kvikkleireskred.geojson
+# — en fil som verken finnes i kartverket/DOK.Arealanalyse.Config (kun .yml-filer der, ingen
+# geojson/geopackage-mapper) eller kopieres inn av vår Dockerfile (kun config/*.yml kopieres).
+# DOKANALYSE_CACHE_ON_STARTUP=false betyr filen heller ikke genereres ved oppstart. Dette er
+# trolig samme rotårsak som gpkg-feilen i nve_flomsoner.yml (oppgave 4) — en strukturell feil i
+# lokal-fil-mønsteret som rammer alle dekningslag av denne typen, ikke bare disse to.
+#
+# WFS-laget app:KvikkleireskredAktsomhetDekning i SAMME tjeneste er verifisert 2026-09-04:
+# GetFeature på samme Trondheims-bbox ga 1 feature. dekningStatus-attributtet er bekreftet via
+# Geonorge-katalogen (produktark for Aktsomhetskart for kvikkleireskred) å følge det nasjonale
+# kodelisteregisteret DekningsStatus (register.geonorge.no/sosi-kodelister/temadata/
+# fullstendighetsdekningskart/dekningsstatus), som bl.a. har koden «ikkeKartlagt» — samme kodeverk
+# og verdi som kv_stormflo.yml bruker for sitt WFS-dekningslag. geom_field er IKKE uavhengig
+# bekreftet for dette laget (samme forbehold som over) — verifiser med DescribeFeatureType før
+# produksjon.
+type: quality
+config_id: 08a6057d-ab78-4114-b924-9d6e093d1a5b
+
+indicators:
+  - type: coverage
+    quality_dimension_id: fullstendighet_dekning
+    quality_dimension_name: Fullstendighetsdekning
+    quality_warning_text: Området er ikke kartlagt for kvikkleireskred
+    warning_threshold: ikkeKartlagt
+    wfs:
+      url: https://wfs.geonorge.no/skwms1/wfs.aktsomhetskartforkvikkleireskred
+      layer: KvikkleireskredAktsomhetDekning
+      geom_field: område
+      property: dekningStatus
