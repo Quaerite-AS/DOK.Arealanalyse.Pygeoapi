@@ -13,11 +13,11 @@
 # - GetFeature bbox 267331,7038761,273331,7044761 (Trondheim): app:AktsomhetsOmrKvikkleireskred
 #   ga 5 features (talt i GML-bodyen — numberReturned-attributtet rapporterte feilaktig "0" for
 #   alle svar; dette er en kjent Geonorge-felle, tell aldri på attributtet).
-# - properties (skredType, opphav, noyaktighet, oppdateringsdato) er IKKE reverifisert mot
-#   DescribeFeatureType for dette laget — videreført fra ArcGIS-konfigen uendret. geom_field
-#   (område) er IKKE bekreftet for nettopp dette laget/denne tjenesten heller — kun bekreftet
-#   som feltnavn på app:SkredFaresone i en annen tjeneste (wfs.skredfaresoner, samme mønster).
-#   Kjør DescribeFeatureType på app:AktsomhetsOmrKvikkleireskred før produksjonssetting.
+# - DescribeFeatureType KJØRT og bekreftet (2026-09-04): app:AktsomhetsOmrKvikkleireskred har
+#   KUN tre felt: område (Surface — geom_field), skredType (gml:CodeType), kartbladIndeks.
+#   Attributtsettet er MINDRE enn upstream sin ArcGIS-properties-liste (skredType, opphav,
+#   noyaktighet, oppdateringsdato) — opphav/noyaktighet/oppdateringsdato finnes IKKE på dette
+#   WFS-laget og er derfor fjernet under, ikke videreført blindt.
 type: dataset
 config_id: 08a6057d-ab78-4114-b924-9d6e093d1a5b
 name: aktsomhetsomr_kvikkleireskred
@@ -35,9 +35,7 @@ layers:
 geom_field: område
 properties:
   - skredType
-  - opphav
-  - noyaktighet
-  - oppdateringsdato
+  - kartbladIndeks
 themes:
   - Samfunnssikkerhet
 ---
@@ -49,14 +47,12 @@ themes:
 # trolig samme rotårsak som gpkg-feilen i nve_flomsoner.yml (oppgave 4) — en strukturell feil i
 # lokal-fil-mønsteret som rammer alle dekningslag av denne typen, ikke bare disse to.
 #
-# WFS-laget app:KvikkleireskredAktsomhetDekning i SAMME tjeneste er verifisert 2026-09-04:
-# GetFeature på samme Trondheims-bbox ga 1 feature. dekningStatus-attributtet er bekreftet via
-# Geonorge-katalogen (produktark for Aktsomhetskart for kvikkleireskred) å følge det nasjonale
-# kodelisteregisteret DekningsStatus (register.geonorge.no/sosi-kodelister/temadata/
+# WFS-laget app:KvikkleireskredAktsomhetDekning i SAMME tjeneste er verifisert 2026-09-04, både
+# via GetFeature (1 feature i Trondheims-bboxen) og DescribeFeatureType: attributtene er
+# dekningStatus (gml:CodeType), kartbladIndeks, område (Surface). dekningStatus følger det
+# nasjonale kodelisteregisteret DekningsStatus (register.geonorge.no/sosi-kodelister/temadata/
 # fullstendighetsdekningskart/dekningsstatus), som bl.a. har koden «ikkeKartlagt» — samme kodeverk
-# og verdi som kv_stormflo.yml bruker for sitt WFS-dekningslag. geom_field er IKKE uavhengig
-# bekreftet for dette laget (samme forbehold som over) — verifiser med DescribeFeatureType før
-# produksjon.
+# og verdi som kv_stormflo.yml bruker for sitt WFS-dekningslag.
 type: quality
 config_id: 08a6057d-ab78-4114-b924-9d6e093d1a5b
 

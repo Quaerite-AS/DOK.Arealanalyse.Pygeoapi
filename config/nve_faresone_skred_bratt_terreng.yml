@@ -24,12 +24,29 @@
 #   observert på den faktiske featuren og er derfor fjernet, ikke videreført blindt — erstattet
 #   med de bekreftede feltene.
 #
-# DEKNING (oppgave 3): Analyseområde/AnalyseområdeGr ser ut som kandidat-dekningslag («området
-# som er ferdig analysert for skredfare i bratt terreng») og ga 2 features i Stranda-bboxen —
-# men attributtskjemaet (dekningStatus-lignende felt eller ren tilstedeværelse uten statuskode?)
-# er IKKE verifisert. Ingen quality-blokk er derfor lagt til her. Dekning forblir `ukjent` for
-# dette temaet inntil DescribeFeatureType er kjørt mot Analyseområde — håndteres på vår side
-# (INV-R16).
+# DEKNING (oppgave 3): Analyseområde er BEKREFTET dekningslag — ikke bare ved treff i
+# Stranda-bboxen (2 features), men ordrett fra NVEs egen DescribeFeatureType-annotasjon for
+# objekttypen: «Selv om dette er landsdekkende data er ikke alle områder i landet analysert med
+# tanke på skredfare. Hvilke områder som er ferdig analysert er gitt av data med objekttypen
+# Analyseområde.» Attributter: område (Surface — geom_field), prosjektURL, rapportURL,
+# identifikasjon, datafangstdato, førsteDigitaliseringsdato, datauttaksdato, oppdateringsdato,
+# opphav — INGEN statuskode-attributt (annerledes enn Kartleggingsområde i wfs.kvikkleire, se
+# forbeholdet i nve_faresone_kvikkleireskred.yml — der ER det en statuskode, kartleggingStatus,
+# og nettopp derfor er dekning IKKE implementert der ennå: presence-semantikk ville vært en usann
+# bekreftelse for et område med status «ikke ferdig kartlagt»). Her er situasjonen motsatt:
+# Analyseområde har ingen statuskode i det hele tatt, så presence ER hele semantikken — det er
+# NVEs egen definisjon, sitert over. Dekningen er derfor rendyrket presence-basert:
+# `property` er satt til `opphav` UTELUKKENDE fordi pydantic-modellen CoverageBaseService i
+# kartverket/DOK.Arealanalyse.Process (models/config/coverage_base_service.py) krever et
+# `property`-felt som PEKER PÅ et reelt XML-element i featuren (coverage_wfs_response_parser.py
+# hopper over featuren, og teller den dermed som ikke-dekket, hvis feltet mangler) — `opphav` er
+# valgt fordi det ALLTID er populert på denne objekttypen, IKKE fordi verdien betyr noe. Selve
+# innholdet i opphav (typisk «NVE») leses aldri opp mot noen terskel. `warning_threshold` er
+# bevisst UTELATT — jf. coverage_quality.py, _get_coverage_quality_data: uten warning_threshold
+# gir fravær av Analyseområde-treff automatisk «ikkeKartlagt», mens ethvert treff (uansett verdi
+# på opphav) gir «Ja» (dekket). OBS ved fremtidig endring: hvis motoren noensinne innfører
+# terskellogikk direkte på `property`-verdien (i stedet for kun tilstedeværelse), må dette
+# oppsettet revurderes — `opphav` er ikke ment å bære mening, kun å eksistere.
 type: dataset
 config_id: d893e564-0a9d-4d3b-8d4f-8485b843b9a0
 name: faresone_skred_bratt_terreng
@@ -51,3 +68,17 @@ properties:
   - opphav
 themes:
   - Samfunnssikkerhet
+---
+type: quality
+config_id: d893e564-0a9d-4d3b-8d4f-8485b843b9a0
+
+indicators:
+  - type: coverage
+    quality_dimension_id: fullstendighet_dekning
+    quality_dimension_name: Fullstendighetsdekning
+    quality_warning_text: Området er ikke kartlagt for skredfare i bratt terreng
+    wfs:
+      url: https://wfs.geonorge.no/skwms1/wfs.skredfaresoner
+      layer: Analyseområde
+      geom_field: område
+      property: opphav
