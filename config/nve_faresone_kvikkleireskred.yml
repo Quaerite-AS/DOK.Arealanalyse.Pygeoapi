@@ -1,0 +1,92 @@
+# Overstyrer kartverket/DOK.Arealanalyse.Config sin nve_faresone_kvikkleireskred.yml.
+#
+# HVORFOR: ArcGIS-transporten (nve.geodataonline.no/arcgis/.../SkredKvikkleire2) svarer
+# resultStatus=ERROR/HTTP 500 i produksjon (verifisert 2026-09-04, quaerite-platform#263 funn D).
+# Beslutning (Håvard, 2026-09-04): bruk WFS. Uendret fra upstream: config_id, metadata_id, name,
+# themes, wms, planning_guidance_id, building_guidance_id. Endret: transportlaget arcgis: → wfs:,
+# lagvalget (se begrunnelse under) og properties (se forbehold).
+#
+# VERIFISERING (2026-09-04, live mot wfs.geonorge.no, egress kjørt utenfor denne sesjonen):
+# - GetCapabilities: tjenesten wfs.kvikkleire har EPSG:25833 i OtherCRS (DefaultCRS er 4258 —
+#   srsName må settes eksplisitt). Lagnavn prefiks app:, navnerom
+#   http://skjema.geonorge.no/SOSI/produktspesifikasjon/Skredfare/1.2 (samme spec som
+#   wfs.skredfaresoner, se nve_faresone_skred_bratt_terreng.yml).
+# - Fem lag finnes: UtlosningOmr, UtlopOmr, KvikkleireFaresoneAvgr, Kartleggingsområde,
+#   Kartleggingsområdekant.
+# - GetFeature bbox 264756,6568641,270756,6574641 (Fredrikstad): UtlosningOmr 5, UtlopOmr 5,
+#   KvikkleireFaresoneAvgr 5, Kartleggingsområde 1 (talt i GML-bodyen — numberReturned
+#   rapporterte feilaktig "0" for alle fire, kjent Geonorge-felle).
+# - DescribeFeatureType KJØRT og bekreftet (2026-09-04): UtlosningOmr og UtlopOmr har IDENTISK
+#   attributtsett: område (gml:SurfacePropertyType — geom_field), skredOmrID (integer),
+#   skredOmrNavn, arealKm2 (double), skredFaregradKlasse, skredFaregradScore (integer),
+#   skredSkadeKonsekvensKlasse, skredSkadeKonsekvensScore (integer),
+#   skredRisikoKvikkleireKlasse, skredKvalKartlegging, prosjektURL, rapportURL, identifikasjon
+#   (nøstet: lokalId/navnerom/versjonId), datauttaksdato, datafangstdato,
+#   førsteDigitaliseringsdato, oppdateringsdato, opphav.
+#
+# LAGVALG — bevisst TO lag, ikke KvikkleireFaresoneAvgr alene:
+# Datasettet skiller utløsningsområde (der skredet kan starte) fra utløpsområde (der skredmassene
+# kan nå). Et tiltak kan ligge i utløpsområdet uten å ligge i utløsningsområdet, og begge er
+# byggesak-relevante — TEK17 § 7-3 / pbl § 28-1 gjelder uavhengig av hvilket av de to en
+# eiendom rammes av.
+# KvikkleireFaresoneAvgr ER BEKREFTET UBRUKELIG som treffobjekt, ikke bare mistenkt: DescribeFeature-
+# Type viser at objektet har ETT eneste felt, `grense: gml:CurvePropertyType` — en linje
+# (grenselinje), ikke en flate. To-lags-løsningen (UtlosningOmr + UtlopOmr) er dermed den eneste
+# mulige løsningen for arealtreff her, ikke bare den foretrukne.
+# properties under er derfor de faktiske, DescribeFeatureType-bekreftede feltene — nærmeste
+# treff mot den gamle ArcGIS-konfigens skredOmrNavn/faregrad/konsekvens/risiko/rapportURL er
+# skredOmrNavn/skredFaregradKlasse/skredSkadeKonsekvensKlasse/skredRisikoKvikkleireKlasse/
+# rapportURL (riktige feltnavn i WFS-skjemaet, i motsetning til ArcGIS-konfigens forkortede
+# navn).
+#
+# DEKNING (oppgave 3) — ÅPENT PUNKT, BEVISST IKKE IMPLEMENTERT I DENNE RUNDEN:
+# Kartleggingsområde FINNES som lag og er DescribeFeatureType-bekreftet (attributter: område
+# (Surface), kartleggingsområdeID, kartleggingsområdeNavn, kartleggingStatus — type
+# app:Prosjektstatus_NVEType, en kodeliste med NI verdier), og ga 1 feature i Fredrikstad-bboxen.
+# Objekttypen heter «Kartleggingsområde» — området som er tatt opp til kartlegging — IKKE
+# «Kartlagtområde». All data hentet under verifiseringen hadde kartleggingStatus = kode 8, og
+# betydningen av denne koden (og de øvrige åtte) er IKKE slått opp — kodelisten Prosjektstatus_NVE
+# lot seg ikke hente fra Geonorge-registeret i denne omgangen.
+# En presence-basert dekningskonfig (uten warning_threshold, slik Analyseområde-laget i
+# nve_faresone_skred_bratt_terreng.yml bruker) ville derfor rapportert et område med f.eks.
+# status «planlagt»/«ikke påbegynt» som kartlagt, bare fordi kartleggingsprosjektet er registrert
+# og geometrien finnes. Det er en USANN bekreftelse — verre enn en manglende opplysning, og
+# selve poenget i quaerite-platform#263 funn E snudd på hodet: en dekningsindikator som lyver
+# «kartlagt» er farligere for naturfare-vurdering (INV-R16) enn ingen dekningsindikator. Dekning
+# for dette datasettet forblir derfor `ukjent`, håndtert på vår side, inntil videre.
+# Når Prosjektstatus_NVE er slått opp: legg til en quality-blokk etter samme mal som
+# Analyseområde-laget (nve_faresone_skred_bratt_terreng.yml), MEN med `warning_threshold` satt
+# til de kodene i Prosjektstatus_NVE som betyr «ikke ferdig kartlagt» — IKKE presence-basert,
+# siden objekttypen dekker et helt kartleggingsprosjekt uavhengig av om det er ferdig.
+type: dataset
+config_id: c24e0058-f555-4a47-b65b-4f011e64789e
+name: faresone_kvikkleireskred
+
+metadata_id: b2d5aaf8-79ac-40f3-9cd6-fdc30bc42ea1
+wfs: https://wfs.geonorge.no/skwms1/wfs.kvikkleire
+wms: https://nve.geodataonline.no/arcgis/services/SkredKvikkleire2/MapServer/WMSServer
+layers:
+  - wfs: UtlosningOmr
+    wms:
+      - KvikkleireRisiko
+    result_status: HIT-RED
+    planning_guidance_id: 1490d2ee-a5c6-4dfb-907a-44cb5022781b
+    building_guidance_id: 2e84d54f-9e93-4559-8214-8cb21567fa04
+  - wfs: UtlopOmr
+    wms:
+      - KvikkleireRisiko
+    result_status: HIT-RED
+    planning_guidance_id: 1490d2ee-a5c6-4dfb-907a-44cb5022781b
+    building_guidance_id: 2e84d54f-9e93-4559-8214-8cb21567fa04
+geom_field: område
+properties:
+  - skredOmrID
+  - skredOmrNavn
+  - skredFaregradKlasse
+  - skredSkadeKonsekvensKlasse
+  - skredRisikoKvikkleireKlasse
+  - rapportURL
+  - datauttaksdato
+  - opphav
+themes:
+  - Samfunnssikkerhet
