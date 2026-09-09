@@ -1,0 +1,93 @@
+# Overstyrer kartverket/DOK.Arealanalyse.Config sin nve_flomsoner.yml.
+#
+# HVORFOR: temaet feiler i produksjon med «check coverage
+# dekningskart_nve_flomsoners.gpkg» — quality-blokken peker på
+# file:///mnt/dokanalyse/geopackage/dekningskart_nve_flomsoner.gpkg, en lokal fil som verken
+# finnes i kartverket/DOK.Arealanalyse.Config (kun .yml-filer der) eller kopieres inn av vår
+# Dockerfile (kun config/*.yml kopieres) — og feilen feller HELE temaet, ikke bare
+# dekningsvurderingen (quaerite-platform#263, oppgave 4). Beslutning (Håvard, 2026-09-05):
+# konklusjonen fra forrige runde om at det ikke fantes noe WFS-dekningskart for flomsoner var
+# feil — wfs.flomsoner (samme tjeneste som hoveddatasettet) inneholder BÅDE FlomAreal og
+# dekningslaget Analyseområde.
+#
+# Uendret fra upstream: config_id, metadata_id, name, themes, wms, result_status,
+# planning_guidance_id, building_guidance_id, geom_field, properties, OG selve
+# wfs-transporten for hoveddatasettet (FlomAreal var allerede WFS i upstream, inkl. filteret
+# `gjentaksintervall IN (20, 200, 2100)`) — dette er IKKE en arcgis→wfs-overstyring som de tre
+# foregående, kun en gpkg→wfs-overstyring av quality-blokken.
+#
+# VERIFISERING (2026-09-05, live mot wfs.geonorge.no, egress kjørt utenfor denne sesjonen):
+# Tjeneste wfs.flomsoner (metadata_id bbb09c4e-f025-455c-81a0-37ee26bd3e15 for tjenesten selv;
+# datasettets egen metadata_id er e95008fc-... som i upstream) har EPSG:25833.
+#
+# app:Analyseområde — DescribeFeatureType bekreftet: område (gml:SurfacePropertyType —
+# geom_field), flomsoneOmråde, flomsoneNavn, kartlagteFlommer, nedbørfelt, rapportNr,
+# orgKoordSys. Skjemaets egen dokumentasjon, ordrett: «Flomsoneprosjektets analyseområde.»
+# INGEN statuskode-attributt — presence ER semantikken, nøyaktig samme mønster som Analyseområde
+# i wfs.skredfaresoner (se nve_faresone_skred_bratt_terreng.yml, merget #2 2026-09-04).
+#
+# GetFeature bbox 264756,6568641,270756,6574641 (Nedre Glomma/Fredrikstad): 1 feature
+#   (flomsoneNavn="Fredrikstad", flomsoneOmråde="Fredrikstad-Sarpsborg", rapportNr="2006_07",
+#   kartlagteFlommer="10, 50, 200")
+# Kontrollutsnitt bbox 262000,6640000,272000,6660000 (Oslo): 5 features
+#   (flomsoneNavn Veitvetbekken/Smalvollveien Alna/Nitelva/…, rapportNr 102455/253120/2017_69,
+#   kartlagteFlommer "200klima, 1000klima" / "200klima" / "20,200,1000,2100")
+# (numberReturned rapporterte feilaktig "0" på begge kall — kjent Geonorge-felle, talt i
+# GML-bodyen.)
+#
+# property: flomsoneOmråde — VILKÅRLIG, IKKE MENINGSBÆRENDE. Valgt fordi feltet er populert på
+# alle observerte features og er stabilt per flomsoneprosjekt (i motsetning til flomsoneNavn,
+# som er per delstrekning/bekk innenfor prosjektet). Kravet kommer fra pydantic-modellen
+# CoverageBaseService i kartverket/DOK.Arealanalyse.Process, som krever et `property`-felt som
+# peker på et reelt, alltid populert XML-element (feltet leses aldri opp mot noen terskel).
+# `warning_threshold` er bevisst UTELATT: uten den faller motoren tilbake på
+# tilstedeværelse-semantikk (coverage_quality.py, _get_coverage_quality_data) — fravær av
+# Analyseområde-treff gir automatisk «ikkeKartlagt», ethvert treff gir «Ja» (dekket).
+#
+# VIKTIG FORBEHOLD (påvirker IKKE denne PR-en, men må stå her): kartlagteFlommer viser at
+# analyseområdene IKKE dekker samme gjentaksintervaller — Fredrikstad-prosjektet over dekker
+# «10, 50, 200», Ellingsrudelva (Oslo-utsnittet) dekker «20,200,1000,2100», Veitvetbekken kun
+# «200klima, 1000klima». Et område kan altså være analysert for 200-årsflom uten å være
+# analysert for 20-årsflom. Presence-basert dekning er RIKTIG som første steg (området har et
+# flomsoneprosjekt eller ikke), men dekning «Ja» betyr IKKE at alle tre gjentaksintervallene i
+# upstream sitt filter (20, 200, 2100) faktisk er kartlagt akkurat der. Full presisjon krever at
+# kartlagteFlommer sammenholdes med gjentaksintervall per treff — det henger sammen med funn C
+# i quaerite-platform#263 (flere alvorlighetsgrader i ETT datasett, samme struktur som
+# stormflos tre lag) og løses ikke her; det blokkerer ikke å få temaet ut av ERROR.
+type: dataset
+config_id: 864d00cf-cb14-4926-b06d-60329eb7f016
+name: flomsoner
+
+metadata_id: e95008fc-0945-4d66-8bc9-e50ab3f50401
+wfs: https://wfs.geonorge.no/skwms1/wfs.flomsoner
+wms: https://nve.geodataonline.no/arcgis/services/Flomsoner1/MapServer/WMSServer
+layers:
+  - wfs: FlomAreal
+    wms:
+      - Flomsone_20arsflom
+      - Flomsone_200arsflom
+      - Flomsone_200arsflom_klima
+    filter: gjentaksintervall IN (20, 200, 2100)
+    result_status: HIT-RED
+    planning_guidance_id: e1ec191f-9b57-4d59-8d56-f2fbf21f825d
+    building_guidance_id: 5adab8dc-b327-49ed-9336-e85fe2453a05
+geom_field: område
+properties:
+  - gjentaksintervall
+  - datauttaksdato
+themes:
+  - Samfunnssikkerhet
+---
+type: quality
+config_id: 864d00cf-cb14-4926-b06d-60329eb7f016
+
+indicators:
+  - type: coverage
+    quality_dimension_id: fullstendighet_dekning
+    quality_dimension_name: Fullstendighetsdekning
+    quality_warning_text: Området er ikke kartlagt for flomsoner
+    wfs:
+      url: https://wfs.geonorge.no/skwms1/wfs.flomsoner
+      layer: Analyseområde
+      geom_field: område
+      property: flomsoneOmråde
