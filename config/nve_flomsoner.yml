@@ -54,6 +54,14 @@
 # kartlagteFlommer sammenholdes med gjentaksintervall per treff — det henger sammen med funn C
 # i quaerite-platform#263 (flere alvorlighetsgrader i ETT datasett, samme struktur som
 # stormflos tre lag) og løses ikke her; det blokkerer ikke å få temaet ut av ERROR.
+#
+# FILTERET SOM STRENGER (quaerite-platform#263 skive 3, GODKJENT av eieren 2026-09-29 15:42):
+# upstream har `gjentaksintervall IN (20, 200, 2100)` med talliteraler. Motoren leser
+# WFS-egenskapene som strenger (xmltodict; DOKANALYSE_USE_XML_SCHEMAS er av som standard), og
+# pygeofilter sammenligner da '20' med 20 og forkaster ALLE FlomAreal. Målt 2026-09-29 mot test
+# og prod: NO-HIT-GREEN med dekning «Ja» midt i en 20-årsflomsone ved Voss (hjørne 30320.774,
+# 6751767.096). Med strengliteraler gir filteret True for '20', '200' og '2100' og False for '50'
+# (etterprøvd lokalt med pygeofilter, cql2_text + NativeEvaluator). Ingen annen endring.
 type: dataset
 config_id: 864d00cf-cb14-4926-b06d-60329eb7f016
 name: flomsoner
@@ -67,7 +75,7 @@ layers:
       - Flomsone_20arsflom
       - Flomsone_200arsflom
       - Flomsone_200arsflom_klima
-    filter: gjentaksintervall IN (20, 200, 2100)
+    filter: gjentaksintervall IN ('20', '200', '2100')
     result_status: HIT-RED
     planning_guidance_id: e1ec191f-9b57-4d59-8d56-f2fbf21f825d
     building_guidance_id: 5adab8dc-b327-49ed-9336-e85fe2453a05
