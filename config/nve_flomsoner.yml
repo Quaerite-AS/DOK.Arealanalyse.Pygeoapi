@@ -62,19 +62,30 @@
 # og prod: NO-HIT-GREEN med dekning «Ja» midt i en 20-årsflomsone ved Voss (hjørne 30320.774,
 # 6751767.096). Med strengliteraler gir filteret True for '20', '200' og '2100' og False for '50'
 # (etterprøvd lokalt med pygeofilter, cql2_text + NativeEvaluator). Ingen annen endring.
+#
+# WMS MED ETT LAG PÅ kart.nve.no (quaerite-platform#263 skive 3, GODKJENT av eieren 2026-09-29):
+# med filterrettingen over traff motoren flomflatene, men analysen endte i ERROR/500. Motorloggen
+# på quaerite-dok-motor-test 2026-09-29 15:22Z: GetCapabilities og tre GetLegendGraphic mot
+# nve.geodataonline.no/arcgis/services/Flomsoner1 feilet med «Cannot connect to host
+# nve.geodataonline.no:443 [Name or service not known]», og create_legend/_merge_images kastet
+# «ValueError('max() iterable argument is empty')». Med flere wms-lag slår motoren sammen
+# tegnforklaringsbilder; med ett lag gir den bare URL-en og henter ingenting.
+# Geonorge-metadata for e95008fc (kartkatalog, lest 2026-09-29) oppgir nå WMS-en
+# kart.nve.no/enterprise/services/Flomsoner2/MapServer/WMSServer. GetCapabilities der (1.3.0,
+# 2026-09-29) har ikke noe navngitt samlelag (rotlaget «Flomsoner2» mangler <Name>), så laget
+# er Flomsone_200arsflom, med LegendURL; GetLegendGraphic svarte 200 image/png.
+# Filteret og alt annet er uendret.
 type: dataset
 config_id: 864d00cf-cb14-4926-b06d-60329eb7f016
 name: flomsoner
 
 metadata_id: e95008fc-0945-4d66-8bc9-e50ab3f50401
 wfs: https://wfs.geonorge.no/skwms1/wfs.flomsoner
-wms: https://nve.geodataonline.no/arcgis/services/Flomsoner1/MapServer/WMSServer
+wms: https://kart.nve.no/enterprise/services/Flomsoner2/MapServer/WMSServer
 layers:
   - wfs: FlomAreal
     wms:
-      - Flomsone_20arsflom
       - Flomsone_200arsflom
-      - Flomsone_200arsflom_klima
     filter: gjentaksintervall IN ('20', '200', '2100')
     result_status: HIT-RED
     planning_guidance_id: e1ec191f-9b57-4d59-8d56-f2fbf21f825d
