@@ -58,13 +58,26 @@
 # Analyseområde-laget (nve_faresone_skred_bratt_terreng.yml), MEN med `warning_threshold` satt
 # til de kodene i Prosjektstatus_NVE som betyr «ikke ferdig kartlagt» — IKKE presence-basert,
 # siden objekttypen dekker et helt kartleggingsprosjekt uavhengig av om det er ferdig.
+#
+# METADATA_ID OG WMS (quaerite-platform#263 skive 5, GODKJENT av eieren 2026-09-30 00:07):
+# - metadata_id var b2d5aaf8 (Skredfaresoner), arvet fra upstream. WFS-en wfs.kvikkleire
+#   oppgir datasettet a29b905c-6aaa-4283-ae2c-d167624c08a8 («Kvikkleire», NVE) i OperatesOn
+#   (docs/DATAKILDER-dok-naturfare.md kap. 2 og 5). Motoren sender metadata_id som
+#   runOnDataset.datasetId; denne oppføringen deler den derfor ikke lenger med
+#   nve_faresone_skred_bratt_terreng.yml. Ingen levert tema i quaerite-platform
+#   (services/analyse) kobler på b2d5aaf8 eller a29b905c (lest på main 224229f).
+# - wms: upstream-verten nve.geodataonline.no finnes ikke i DNS. Geonorge-metadata for a29b905c
+#   (kartkatalog, lest 2026-09-29 22:34Z) oppgir
+#   kart.nve.no/enterprise/services/SkredKvikkleire2/MapServer/WMSServer. GetCapabilities der
+#   (1.3.0, 2026-09-29 22:31Z) har laget KvikkleireRisiko med LegendURL; samme lagnavn som før,
+#   ett lag per lagoppføring.
 type: dataset
 config_id: c24e0058-f555-4a47-b65b-4f011e64789e
 name: faresone_kvikkleireskred
 
-metadata_id: b2d5aaf8-79ac-40f3-9cd6-fdc30bc42ea1
+metadata_id: a29b905c-6aaa-4283-ae2c-d167624c08a8
 wfs: https://wfs.geonorge.no/skwms1/wfs.kvikkleire
-wms: https://nve.geodataonline.no/arcgis/services/SkredKvikkleire2/MapServer/WMSServer
+wms: https://kart.nve.no/enterprise/services/SkredKvikkleire2/MapServer/WMSServer
 layers:
   - wfs: UtlosningOmr
     wms:

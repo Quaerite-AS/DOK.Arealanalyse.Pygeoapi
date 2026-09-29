@@ -47,13 +47,22 @@
 # på opphav) gir «Ja» (dekket). OBS ved fremtidig endring: hvis motoren noensinne innfører
 # terskellogikk direkte på `property`-verdien (i stedet for kun tilstedeværelse), må dette
 # oppsettet revurderes — `opphav` er ikke ment å bære mening, kun å eksistere.
+#
+# WMS PÅ kart.nve.no (quaerite-platform#263 skive 5, GODKJENT av eieren 2026-09-30 00:07):
+# upstream-verten nve.geodataonline.no finnes ikke i DNS (docs/DATAKILDER-dok-naturfare.md
+# kap. 4). Geonorge-metadata for b2d5aaf8 (kartkatalog, lest 2026-09-29 22:34Z) oppgir
+# kart.nve.no/enterprise/services/Skredfaresoner1/MapServer/WMSServer. GetCapabilities der
+# (1.3.0, 2026-09-29 22:31Z) har lagene Skredsoner_5000, Skredsoner_1000, Skredsoner_100 og
+# Skredanalyseomraade, alle med LegendURL. Laget er uendret (Skredanalyseomraade, dekningslaget);
+# om kartet heller skal vise faresonene, avgjøres sammen med visning i kart, ikke her.
+# metadata_id deles ikke lenger med nve_faresone_kvikkleireskred.yml, som nå har a29b905c.
 type: dataset
 config_id: d893e564-0a9d-4d3b-8d4f-8485b843b9a0
 name: faresone_skred_bratt_terreng
 
 metadata_id: b2d5aaf8-79ac-40f3-9cd6-fdc30bc42ea1
 wfs: https://wfs.geonorge.no/skwms1/wfs.skredfaresoner
-wms: https://nve.geodataonline.no/arcgis/services/Skredfaresoner1/MapServer/WMSServer
+wms: https://kart.nve.no/enterprise/services/Skredfaresoner1/MapServer/WMSServer
 layers:
   - wfs: SkredFaresone
     wms:
