@@ -18,13 +18,20 @@
 #   Attributtsettet er MINDRE enn upstream sin ArcGIS-properties-liste (skredType, opphav,
 #   noyaktighet, oppdateringsdato) — opphav/noyaktighet/oppdateringsdato finnes IKKE på dette
 #   WFS-laget og er derfor fjernet under, ikke videreført blindt.
+#
+# WMS PÅ kart.nve.no (quaerite-platform#263 skive 5, GODKJENT av eieren 2026-09-30 00:07):
+# upstream-verten nve.geodataonline.no finnes ikke i DNS (docs/DATAKILDER-dok-naturfare.md
+# kap. 4). Geonorge-metadata for dabd2a2c (kartkatalog, lest 2026-09-29 22:34Z) oppgir WMS-en
+# kart.nve.no/enterprise/services/KvikkleireskredAktsomhet/MapServer/WMSServer. GetCapabilities
+# der (1.3.0, 2026-09-29 22:31Z) har laget KvikkleireskredAktsomhet med LegendURL; samme
+# lagnavn som før. Bare `wms` er endret.
 type: dataset
 config_id: 08a6057d-ab78-4114-b924-9d6e093d1a5b
 name: aktsomhetsomr_kvikkleireskred
 
 metadata_id: dabd2a2c-36d5-4ed7-a4c9-d49808a2b848
 wfs: https://wfs.geonorge.no/skwms1/wfs.aktsomhetskartforkvikkleireskred
-wms: https://nve.geodataonline.no/arcgis/services/KvikkleireskredAktsomhet/MapServer/WMSServer
+wms: https://kart.nve.no/enterprise/services/KvikkleireskredAktsomhet/MapServer/WMSServer
 layers:
   - wfs: AktsomhetsOmrKvikkleireskred
     wms:

@@ -1,0 +1,35 @@
+# Overstyrer kartverket/DOK.Arealanalyse.Config sin nve_flom_aktsomhets_omr.yml.
+# Bygger på upstream ba1828e62022077f1cb4ffb1cafebf0239ba09d5 (main, 2026-07-29).
+#
+# HVORFOR (quaerite-platform#263 skive 5, GODKJENT av eieren 2026-09-30 00:07): upstream har
+# `wms` på nve.geodataonline.no/arcgis/services/FlomAktsomhet, som ikke finnes i DNS
+# (docs/DATAKILDER-dok-naturfare.md kap. 4). Geonorge-metadata for 60c5024f (kartkatalog, lest
+# 2026-09-29 22:34Z) oppgir kart.nve.no/enterprise/services/Flomaktsomhet/MapServer/WMSServer
+# (merk liten a i tjenestenavnet). GetCapabilities der (1.3.0, 2026-09-29 22:31Z) har laget
+# Flom_aktsomhetsomrade med LegendURL; samme lagnavn som upstream.
+#
+# Bare `wms` er endret. Alt annet er upstream ordrett, også `wfs` med http, slik
+# Geonorge-metadataen for WFS-en oppgir den. Dekning fra FlomAktsomhetDekning er ikke i
+# omfanget for skive 5.
+---
+type: dataset
+config_id: 72599474-0ab7-4563-8d68-4fe330781d36
+name: flom_aktsomhets_omr
+
+metadata_id: 60c5024f-bf93-4d7a-888a-5fe001427195
+wfs: http://wfs.geonorge.no/skwms1/wfs.flomaktsomhetsomrader
+wms: https://kart.nve.no/enterprise/services/Flomaktsomhet/MapServer/WMSServer
+layers:
+  - wfs: FlomAktsomhetOmr
+    wms:
+      - Flom_aktsomhetsomrade
+    result_status: HIT-YELLOW
+    planning_guidance_id: 8ddb40bf-0045-4426-8886-1d85ef349eeb
+    building_guidance_id: 44ef4297-d5a5-4fab-9db3-d67429d7a5f0
+geom_field: område
+properties:
+  - vassOmråde
+  - temaKvalitet
+  - vannKilde
+themes:
+  - Samfunnssikkerhet
