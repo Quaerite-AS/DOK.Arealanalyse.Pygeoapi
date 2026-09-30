@@ -1,0 +1,43 @@
+---
+type: dataset
+config_id: 7914d4d9-8101-432e-ac36-ac086491f758
+name: snoskred_aktsomhets_omr
+comment: >-
+  Quaerite-fork (quaerite-platform #899). Erstatter upstream-fila, som har
+  disabled: true, en WFS som svarer «UKJENT APPLIKASJON» og WMS på den døde
+  verten nve.geodataonline.no. Distribusjonene er de Geonorge-metadataen for
+  54ada9d8 oppgir (målt 2026-09-30, #885 5909387289). Ett WMS-lag.
+
+metadata_id: 54ada9d8-e6fc-48d6-82b0-5477166a4aaa
+wfs: https://wfs.geonorge.no/skwms1/wfs.aktsomhetskartforsnoskred
+wms: https://kart.nve.no/enterprise/services/SnoskredAktsomhet/MapServer/WMSServer
+layers:
+  - wfs: PotensieltSkredfareOmr
+    wms:
+      - S3_snoskred_Aktsomhetsomrade
+    result_status: HIT-YELLOW
+    planning_guidance_id: 7831236b-c9c1-4d5f-af4b-cac0304d7d6e
+    building_guidance_id: 7831236b-c9c1-4d5f-af4b-cac0304d7d6e
+geom_field: område
+properties:
+  - skredType
+  - sikkerhetsklasse
+  - skogeffekt
+themes:
+  - Samfunnssikkerhet
+
+---
+type: quality
+config_id: 7914d4d9-8101-432e-ac36-ac086491f758
+
+indicators:
+  - type: coverage
+    quality_dimension_id: fullstendighet_dekning
+    quality_dimension_name: Fullstendighetsdekning
+    quality_warning_text: Området er ikke kartlagt for snøskred
+    warning_threshold: null
+    wfs:
+      url: https://wfs.geonorge.no/skwms1/wfs.aktsomhetskartforsnoskred
+      layer: Kartblad
+      geom_field: område
+      property: dekningStatus
