@@ -1,0 +1,60 @@
+# Quaerite-fork (quaerite-platform#922 ANA-TOLK-4 PR 3). Ny fil: upstream
+# (kartverket/DOK.Arealanalyse.Config) har ingen oppføring for marin grense.
+#
+# HVORFOR: analyse-tjenesten får temaet `dok.marin-grense` (#922 PR 4). Det er
+# reserve for kvikkleire når NVEs aktsomhetskart ikke er kontrollert
+# (docs/REGELVERK-naturfare-tolkning.md 6.6 punkt 4 og 5). Eierens valg
+# 2026-10-01/02 (#922, valg 1): oppføring i forken som motoren sender, likt de
+# andre temaene. Analyse-tjenesten spør NGU selv for dekning (PR 4).
+#
+# TEMA SAMFUNNSSIKKERHET (eierens valg 6, #922): Geonorge fører datasettet under
+# DOK-kategorien «Geologi» (kartkatalog cf8ccec7, KeywordsNationalTheme, lest
+# 2026-10-02). Det er lagt under Samfunnssikkerhet her, så det kommer i samme
+# motorkall som de andre naturfaretemaene. Avviket er bevisst.
+#
+# KILDE (Geonorge-metadata for cf8ccec7, lest 2026-10-02): distribusjonene er
+# OGC API https://geo.ngu.no/api/features/maringrense og WMS
+# https://geo.ngu.no/mapserver/MarinGrenseWMS4.
+#
+# VERIFISERING (live mot geo.ngu.no, AGENTS.md § 10):
+# - 2026-10-01 (#922 5942520114): samlingen `maringrenseflate` svarer på
+#   motorens kallform (`filter-lang=cql2-text`, `S_INTERSECTS`, `filter-crs`
+#   EPSG:25833, adapters/ogc_api.py i DOK.Arealanalyse.Process@b9cf49f) med
+#   geometrifeltet `område` (`geometry`, `geom` og `omraade` gir 400).
+#   `annetKvTema` har tre verdier: '1' areal over marin grense, '2' areal under
+#   marin grense, '3' areal med lite eller ingen marin påvirkning etter istiden.
+# - 2026-10-02: samme kallform med `AND annetKvTema = '2'` på 610 × 610 m gir
+#   200 og ett treff i Oslo (262000, 6649000) og Trondheim (270000, 7041000),
+#   og 0 i Røros (344000, 6950000), der laget uten filter gir '1'.
+#   GetCapabilities (1.3.0) for MarinGrenseWMS4 har laget
+#   `Marin_grense_flater_areal_under` («Areal under marin grense»).
+#
+# TREFF = BARE '2' (eierens valg 2, #922): «over» er kontrollert uten treff, og
+# '3' regnes som over marin grense (eierens tolkningsvalg, STYRING 5942679922 og
+# 5942806572). Begge avgjøres i analyse-tjenesten, ikke her.
+#
+# INGEN DEKNING HER: motoren kan ikke hente dekning fra OGC API
+# (services/coverage.py støtter WFS, ArcGIS og geofil). Dekningen beregnes i
+# analyse-tjenesten (#922 PR 4).
+---
+type: dataset
+config_id: 4f6a77d8-7842-4040-9830-ed310ff14c8e
+name: marin_grense
+title: Marin grense
+
+metadata_id: cf8ccec7-9505-4d84-94a9-eac9c69971d3
+ogc_api: https://geo.ngu.no/api/features/maringrense
+wms: https://geo.ngu.no/mapserver/MarinGrenseWMS4
+layers:
+  - ogc_api: maringrenseflate
+    filter: annetKvTema = '2'
+    wms:
+      - Marin_grense_flater_areal_under
+    result_status: HIT-YELLOW
+geom_field: område
+properties:
+  - annetKvTema
+  - annetKvTemaNavn
+  - opphav
+themes:
+  - Samfunnssikkerhet
