@@ -1,0 +1,31 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Installer pygeoapi og pinnet Process fra Dockerfile
+        run: |
+          REF=$(sed -n 's/^ARG DOKANALYSE_PROCESS_REF=//p' Dockerfile)
+          PYGEOAPI=$(sed -n 's/^FROM geopython\/pygeoapi://p' Dockerfile)
+          test -n "$REF" && test -n "$PYGEOAPI"
+          echo "Process $REF, pygeoapi $PYGEOAPI"
+          # starlette og uvicorn som i Dockerfile (PYTHON_PACKAGES).
+          python -m pip install "pygeoapi==$PYGEOAPI" starlette uvicorn pytest \
+            "git+https://github.com/kartverket/DOK.Arealanalyse.Process.git@$REF"
+      - name: Skriptkontroll
+        run: bash -n entrypoint.sh
+      - name: Tester
+        run: python -m pytest -q tests
