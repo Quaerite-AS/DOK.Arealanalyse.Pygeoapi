@@ -22,7 +22,8 @@ jobs:
           PYGEOAPI=$(sed -n 's/^FROM geopython\/pygeoapi://p' Dockerfile)
           test -n "$REF" && test -n "$PYGEOAPI"
           echo "Process $REF, pygeoapi $PYGEOAPI"
-          python -m pip install "pygeoapi==$PYGEOAPI" pytest \
+          # starlette og uvicorn som i Dockerfile (PYTHON_PACKAGES).
+          python -m pip install "pygeoapi==$PYGEOAPI" starlette uvicorn pytest \
             "git+https://github.com/kartverket/DOK.Arealanalyse.Process.git@$REF"
       - name: Skriptkontroll
         run: bash -n entrypoint.sh
