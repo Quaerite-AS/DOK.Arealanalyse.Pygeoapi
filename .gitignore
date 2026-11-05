@@ -1,2 +1,4 @@
 .env
 deploy-azure.sh
+__pycache__/
+.pytest_cache/
